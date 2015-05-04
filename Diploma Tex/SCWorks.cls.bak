@@ -206,7 +206,7 @@
 \newcommand{\starsection}[1]{
     \structformat
     \section*{#1}
-    \addcontentsline{toc}{section}{#1}
+    \addcontentsline{toc}{section}{#2}
     \setcounter{section}{0}
     \secformat
 }
@@ -274,7 +274,7 @@
 
   \titleformat{\section}[display]
     {\centering\normalfont\bfseries}
-  {\thesection}{0ex}{}
+  {\thesection}{1ex}{}
   \titlespacing{\section}
   {0cm}{1ex plus 01ex minus .2ex}{4ex plus.2ex}
 }

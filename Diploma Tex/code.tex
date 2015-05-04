@@ -1,112 +1,144 @@
 \begin{verbatim}
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+import java.math.BigInteger;
 
-namespace GostECC
+//класс для умножения точек эллиптической кривой
+public class ECPoint
 {
-    //класс для умножения точек эллиптической кривой
-    public class ECPoint
+    public BigInteger x;
+    public BigInteger y;
+    public BigInteger a;
+    public BigInteger b;
+    public BigInteger FieldChar;
+
+    public ECPoint(ECPoint p)
     {
-        public BigInteger x;
-        public BigInteger y;
-        public BigInteger a;
-        public BigInteger b;
-        public BigInteger FieldChar;
+        x = p.x;
+        y = p.y;
+        a = p.a;
+        b = p.b;
+        FieldChar = p.FieldChar;
+    }
 
-        public ECPoint(ECPoint p)
+    public ECPoint()
+    {
+
+    }
+
+    //сложение двух точек P1 и P2
+    public static ECPoint add(ECPoint p1, ECPoint p2)
+    {
+        ECPoint p3 = new ECPoint();
+        p3.a = p1.a;
+        p3.b = p1.b;
+        p3.FieldChar = p1.FieldChar;
+
+        BigInteger dy = p2.y.add(p1.y.negate());
+        BigInteger dx = p2.x.add(p1.x.negate());
+
+        if (dx.signum() < 0)
         {
-            x = p.x;
-            y = p.y;
-            a = p.a;
-            b = p.b;
-            FieldChar = p.FieldChar;
+            dx = dx.add(p1.FieldChar);
         }
 
-        public ECPoint()
+        if (dy.signum() < 0)
         {
-            x = new BigInteger();
-            y = new BigInteger();
-            a = new BigInteger();
-            b = new BigInteger();
-            FieldChar = new BigInteger();
+            dy = dy.add(p1.FieldChar);
         }
-        //сложение двух точек P1 и P2
-        public static ECPoint operator +(ECPoint p1, ECPoint p2)
+
+        BigInteger m =
+                dy.multiply(dx.modInverse(p1.FieldChar))
+                  .mod(p1.FieldChar);
+
+        if (m.signum() < 0)
         {
-            ECPoint p3 = new ECPoint();
-            p3.a = p1.a;
-            p3.b = p1.b;
-            p3.FieldChar = p1.FieldChar;
-
-            BigInteger dy = p2.y - p1.y;
-            BigInteger dx = p2.x - p1.x;
-
-            if (dx < 0)
-                dx += p1.FieldChar;
-            if (dy < 0)
-                dy += p1.FieldChar;
-
-            BigInteger m = (dy * dx.modInverse(p1.FieldChar)) % p1.FieldChar;
-            if (m < 0)
-                m += p1.FieldChar;
-            p3.x = (m * m - p1.x - p2.x) % p1.FieldChar;
-            p3.y = (m * (p1.x - p3.x) - p1.y) % p1.FieldChar;
-            if (p3.x < 0)
-                p3.x += p1.FieldChar;
-            if (p3.y < 0)
-                p3.y += p1.FieldChar;
-            return p3;
+            m = m.add(p1.FieldChar);
         }
-        //сложение точки P c собой же
-        public static ECPoint Double(ECPoint p)
+
+        p3.x = m.pow(2).add(p1.x.add(p2.x).negate()).mod(p1.FieldChar);
+        p3.y = m.multiply(p1.x.add(p3.x.negate()))
+                .add(p1.y.negate()).mod(p1.FieldChar);
+
+        if (p3.x.signum() < 0)
         {
-            ECPoint p2 = new ECPoint();
-            p2.a = p.a;
-            p2.b = p.b;
-            p2.FieldChar = p.FieldChar;
-
-            BigInteger dy = 3 * p.x * p.x + p.a;
-            BigInteger dx = 2 * p.y;
-
-            if (dx < 0)
-                dx += p.FieldChar;
-            if (dy < 0)
-                dy += p.FieldChar;
-
-            BigInteger m = (dy * dx.modInverse(p.FieldChar)) % p.FieldChar;
-            p2.x = (m * m - p.x - p.x) % p.FieldChar;
-            p2.y = (m * (p.x - p2.x) - p.y) % p.FieldChar;
-            if (p2.x < 0)
-                p2.x += p.FieldChar;
-            if (p2.y < 0)
-                p2.y += p.FieldChar;
-
-            return p2;
+            p3.x = p3.x.add(p1.FieldChar);
         }
-        //умножение точки на число x, по сути своей представляет x сложений точки самой с собой
-        public static ECPoint multiply(BigInteger x, ECPoint p)
+        if (p3.y.signum() < 0)
         {
-            ECPoint temp = p;
-            x = x - 1;
-            while (x != 0)
+            p3.y = p3.y.add(p1.FieldChar);
+        }
+        return p3;
+    }
+
+    //сложение точки P c собой же
+    public static ECPoint Double(ECPoint p)
+    {
+        ECPoint p2 = new ECPoint();
+        p2.a = p.a;
+        p2.b = p.b;
+        p2.FieldChar = p.FieldChar;
+
+        BigInteger dy = p.x.pow(2).multiply(p.a)
+                         .multiply(BigInteger.valueOf(3));
+        BigInteger dx = p.y.multiply(BigInteger.valueOf(2));
+
+        if (dx.signum() < 0)
+        {
+            dx = dx.add(p.FieldChar);
+        }
+        if (dy.signum() < 0)
+        {
+            dy = dy.add(p.FieldChar);
+        }
+
+        BigInteger m =
+                dy.multiply(dx.modInverse(p.FieldChar))
+                  .mod(p.FieldChar);
+
+        p2.x = m.pow(2).add(p.x.pow(2).negate()).mod(p.FieldChar);
+        p2.y = m.multiply(p.x.add(p2.x.negate()))
+                .add(p.y.negate()).mod(p.FieldChar);
+
+        if (p2.x.signum() < 0)
+        {
+            p2.x = p2.x.add(p.FieldChar);
+        }
+        if (p2.y.signum() < 0)
+        {
+            p2.y = p2.y.add(p.FieldChar);
+        }
+
+        return p2;
+    }
+
+    //умножение точки на число x,
+    //по сути своей представляет x сложений точки самой с собой
+    public static ECPoint multiply(BigInteger x, ECPoint p)
+    {
+        ECPoint temp = p;
+        x = x.add(BigInteger.valueOf(-1));
+
+        while (x.signum() != 0)
+        {
+
+            if (x.mod(BigInteger.valueOf(2)).signum() != 0)
             {
-
-                if ((x % 2) != 0)
+                if (temp.x.equals(p.x) || temp.y.equals(p.y))
                 {
-                    if ((temp.x == p.x) || (temp.y == p.y))
-                        temp = Double(temp);
-                    else
-                        temp = temp + p;
-                    x = x - 1;
+                    temp = Double(temp);
                 }
-                x = x / 2;
-                p = Double(p);
+                else
+                {
+                    temp = ECPoint.add(temp, p);
+                }
+                x = x.add(BigInteger.valueOf(-1));
             }
-            return temp;
+            x = x.divide(BigInteger.valueOf(2));
+            p = Double(p);
         }
+        return temp;
     }
 }
 
-\end{verbatim}
+
+
+\end{verbatim} 
