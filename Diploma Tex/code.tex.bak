@@ -1,7 +1,7 @@
 \begin{verbatim}
 import java.math.BigInteger;
 
-//класс для умножения точек эллиптической кривой
+//класс для арифметических операций точек эллиптической кривой
 public class ECPoint
 {
     public BigInteger x;
@@ -136,14 +136,6 @@ public class ECPoint
             p = Double(p);
         }
         return temp;
-    }
-
-    public static void main(String[] args) {
-        System.out.println("Start");
-
-
-
-        System.out.println("End");
     }
 }
 
